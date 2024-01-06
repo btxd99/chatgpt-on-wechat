@@ -160,6 +160,8 @@ class ChatGPTBot(Bot, OpenAIImage):
                 logger.warn("[CHATGPT] 第{}次重试".format(retry_count + 1))
                 return self.reply_text(session, api_key, args, retry_count + 1)
             else:
+                result["content"] = ""
+                logger.warn("[CHATGPT] openai.error: delete result")
                 return result
 
 
