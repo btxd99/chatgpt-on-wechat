@@ -187,15 +187,8 @@ class WechatChannel(ChatChannel):
     def send(self, reply: Reply, context: Context):
         receiver = context["receiver"]
         if reply.type == ReplyType.TEXT:
-            # 遇到"\n \n \n"就拆分消息
-            reply_list = re.split('\n \n \n', reply.content)
-            for each_line in reply_list:
-                reply.content = each_line.strip()
-                # 模拟打字速度
-                time.sleep(1 + 0.7 * len(each_line))
-                logger.debug("Typing {} words, sleep {} s".format(len(each_line), 1 + 0.7 * len(each_line)))
-                itchat.send(reply.content, toUserName=receiver)
-                logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
+            itchat.send(reply.content, toUserName=receiver)
+            logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
         elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
             itchat.send(reply.content, toUserName=receiver)
             logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
