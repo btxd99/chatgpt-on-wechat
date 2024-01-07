@@ -78,7 +78,7 @@ class Humantone(Plugin):
 
         reply = e_context["reply"]
         reply_text = reply.content
-        logger.info("[HumanTone] on_decorate_reply. content: %s" % reply_text)
+        logger.debug("[HumanTone] on_decorate_reply. content: %s" % reply_text)
 
         # 遍历过滤器列表，对回复文本进行过滤
         for re_reply_filter in self.reply_filter_list:
@@ -91,7 +91,7 @@ class Humantone(Plugin):
         if len(re.findall(self.punctuation_to_filter, reply_text)) > self.max_punctuation:
             reply_text = re.sub(self.punctuation_to_filter, "\n \n \n", reply_text)
         reply_text = reply_text.strip()
-        logger.info(f"[HumanTone] Reply: reply_text: {reply_text}")
+        logger.debug(f"[HumanTone] Reply: reply_text: {reply_text}")
         reply = Reply(ReplyType.TEXT, reply_text)
         e_context["reply"] = reply
         e_context.action = EventAction.CONTINUE

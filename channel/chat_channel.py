@@ -327,30 +327,58 @@ class ChatChannel(Channel):
                 self.sessions[session_id][0].putleft(context)  # 优先处理管理命令
             else:
                 self.sessions[session_id][0].put(context)
+                logger.debug("Put context{} to session {}".format(context.content,session_id))
 
     # 消费者函数，单独线程，用于从消息队列中取出消息并处理
     def consume(self):
         while True:
             with self.lock:
                 session_ids = list(self.sessions.keys())
+
                 for session_id in session_ids:
                     context_queue, semaphore = self.sessions[session_id]
+                    combine_context = Context()
+                    combine_content = ""
                     if semaphore.acquire(blocking=False):  # 等线程处理完毕才能删除
-                        if not context_queue.empty():
+                        while not context_queue.empty():
                             context = context_queue.get()
                             logger.debug("[WX] consume context: {}".format(context))
-                            future: Future = self.handler_pool.submit(self._handle, context)
-                            future.add_done_callback(self._thread_pool_callback(session_id, context=context))
-                            if session_id not in self.futures:
-                                self.futures[session_id] = []
-                            self.futures[session_id].append(future)
-                        elif semaphore._initial_value == semaphore._value + 1:  # 除了当前，没有任务再申请到信号量，说明所有任务都处理完毕
+                            # 合并非"#"开头的文本内容，待最后消费处理combine_context
+                            if context.type == ContextType.TEXT and not context.content.startswith("#"):
+                                combine_context = context
+                                if context.content:
+                                    if combine_content:
+                                        combine_content = combine_content + "\n" + context.content
+                                    else:
+                                        combine_content = context.content
+                                combine_context.content = combine_content
+                            # 非普通文本内容，直接消费处理
+                            else:
+                                logger.debug("[WX] consume context directly: {}".format(context))
+                                future: Future = self.handler_pool.submit(self._handle, context)
+                                future.add_done_callback(self._thread_pool_callback(session_id, context=context))
+                                if session_id not in self.futures:
+                                    self.futures[session_id] = []
+                                self.futures[session_id].append(future)
+                            # 已经没有下一个消息，消费处理combine_context
+                            if context_queue.empty():
+                                if combine_content:
+                                    logger.debug("[WX] consume combine_content: {}".format(combine_content))
+                                    future: Future = self.handler_pool.submit(self._handle, combine_context)
+                                    future.add_done_callback(self._thread_pool_callback(session_id, context=combine_context))
+                                    if session_id not in self.futures:
+                                        self.futures[session_id] = []
+                                    self.futures[session_id].append(future)
+                        if semaphore._initial_value == semaphore._value + 1:  # 除了当前，没有任务再申请到信号量，说明所有任务都处理完毕
+                            time.sleep(0.1)
                             self.futures[session_id] = [t for t in self.futures[session_id] if not t.done()]
-                            assert len(self.futures[session_id]) == 0, "thread pool error"
-                            del self.sessions[session_id]
+                            logger.debug("[WX] Future len(self.futures[session_id])1: {}".format(len(self.futures[session_id])))
+                            if len(self.futures[session_id]) == 0:
+                                del self.sessions[session_id]
+                                logger.debug("[WX] ------------del self.sessions---------------{}".format(session_id))
                         else:
                             semaphore.release()
-            time.sleep(0.1)
+            time.sleep(10)
 
     # 取消session_id对应的所有任务，只能取消排队的消息和已提交线程池但未执行的任务
     def cancel_session(self, session_id):
