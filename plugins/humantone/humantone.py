@@ -73,6 +73,16 @@ class Humantone(Plugin):
                 return
 
     def on_decorate_reply(self, e_context: EventContext):
+        # 如果是ERROR类型，删除[ERROR]答复
+        if e_context["reply"].type in [ReplyType.ERROR]:
+            reply = e_context["reply"]
+            reply_text = reply.content
+            logger.warn("[HumanTone] on_decorate_reply. Delete content: %s" % reply_text)
+            reply = Reply(ReplyType.TEXT, reply_text)
+            e_context["reply"] = reply
+            e_context.action = EventAction.CONTINUE
+            return
+        # 如果不是TEXT类型，则忽略
         if e_context["reply"].type not in [ReplyType.TEXT]:
             return
 
@@ -95,11 +105,6 @@ class Humantone(Plugin):
         reply = Reply(ReplyType.TEXT, reply_text)
         e_context["reply"] = reply
         e_context.action = EventAction.CONTINUE
-
-        # 模拟打字速度
-        # logger.debug("Typing {} words, sleep {} s".format(len(reply_text), 1 + 0.7 * len(reply_text)))
-        # time.sleep(1 + 0.7 * len(reply_text))
-
         # else:
         #     reply_list = [reply_text]
         # # 如果max_statement存在且大于0，则丢弃后面的内容，以免说太多
@@ -107,13 +112,6 @@ class Humantone(Plugin):
         #     if len(reply_list) > self.max_statement:
         #         reply_list = reply_list[:self.max_statement]
         #         logger.debug(f"[HumanTone] Truncated: len(reply_list) > {self.max_statement}, truncated the end")
-
-        # for each_line in reply_list:
-        #     reply.content = each_line.strip()
-        #     # 模拟打字速度
-        #     time.sleep(1 + 0.7 * len(each_line))
-        #     logger.debug("Typing {} words, sleep {} s".format(len(each_line), 1 + 0.7 * len(each_line)))
-        #     self.send(reply, context)
 
     def get_help_text(self, **kwargs):
         return "把回复内容改成人类答复习惯：删除部分标点符号、删除机器人常用的各种礼貌/正式术语、拆分成多句"
