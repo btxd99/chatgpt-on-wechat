@@ -311,7 +311,10 @@ class ChatChannel(Channel):
             except Exception as e:
                 logger.exception("Worker raise exception: {}".format(e))
             with self.lock:
-                self.sessions[session_id][1].release()
+                try:
+                    self.sessions[session_id][1].release()
+                except Exception as e:
+                    logger.warn("sessions[session_id][1].release {} exception: {}".format(session_id, e))
 
         return func
 
@@ -377,6 +380,7 @@ class ChatChannel(Channel):
                                 del self.sessions[session_id]
                                 logger.debug("[WX] ------------del self.sessions---------------{}".format(session_id))
                         else:
+                            logger.debug("[WX] ------------semaphore.release()---------------")
                             semaphore.release()
             time.sleep(15)
 
