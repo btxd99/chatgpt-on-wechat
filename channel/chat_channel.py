@@ -378,7 +378,7 @@ class ChatChannel(Channel):
                                 logger.debug("[WX] ------------del self.sessions---------------{}".format(session_id))
                         else:
                             semaphore.release()
-            time.sleep(10)
+            time.sleep(15)
 
     # 取消session_id对应的所有任务，只能取消排队的消息和已提交线程池但未执行的任务
     def cancel_session(self, session_id):

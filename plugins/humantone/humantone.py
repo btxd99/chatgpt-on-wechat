@@ -57,7 +57,7 @@ class Humantone(Plugin):
 
         # 获取上下文内容
         content = e_context["context"].content
-        logger.debug("[HumanTone] on_handle_context. content: %s" % content)
+        logger.info("[HumanTone] on_handle_context. content: %s" % content)
         # 如果消息内容小于最小长度，则忽略，用于过滤一些无意义的消息
         if len(content) < self.content_min_length:
             logger.info(f"[HumanTone] Ignore: Len < {self.content_min_length} , ignore this msg.")
