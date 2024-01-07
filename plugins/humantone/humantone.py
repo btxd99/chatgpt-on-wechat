@@ -78,7 +78,7 @@ class Humantone(Plugin):
 
         reply = e_context["reply"]
         reply_text = reply.content
-        logger.debug("[HumanTone] on_decorate_reply. content: %s" % reply_text)
+        logger.info("[HumanTone] on_decorate_reply. content: %s" % reply_text)
 
         # 遍历过滤器列表，对回复文本进行过滤
         for re_reply_filter in self.reply_filter_list:
