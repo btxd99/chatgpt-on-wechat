@@ -56,10 +56,13 @@ def _check(func):
         self.receivedMsgs[msgId] = True
         create_time = cmsg.create_time  # 消息时间戳
         if conf().get("hot_reload") == True and int(create_time) < int(time.time()) - 60:  # 跳过1分钟前的历史消息
-            logger.debug("[WX]history message {} skipped".format(msgId))
+            # logger.debug("[WX]history message {} skipped".format(msgId))
             return
         if cmsg.my_msg and not cmsg.is_group:
             logger.debug("[WX]my message {} skipped".format(msgId))
+            logger.debug("[WX]my message {} ".format(cmsg))
+            session = self.cancel_session(cmsg.to_user_id)
+            logger.debug("[WX]cancel_session {} ".format(cmsg.to_user_id))
             return
         return func(self, cmsg)
 
@@ -192,7 +195,7 @@ class WechatChannel(ChatChannel):
             for each_line in reply_list:
                 reply.content = each_line.strip()
                 # 模拟打字速度
-                time.sleep(1 + 0.7 * len(each_line))
+                time.sleep(1.5 + 0.6 * len(each_line))
                 logger.debug("Typing {} words, sleep {} s".format(len(each_line), 1 + 0.7 * len(each_line)))
                 itchat.send(reply.content, toUserName=receiver)
                 logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))

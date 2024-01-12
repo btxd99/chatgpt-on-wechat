@@ -170,11 +170,12 @@ class Role(Plugin):
                     self.roles[role][desckey],
                     self.roles[role].get("wrapper", "%s"),
                 )
-                reply = Reply(ReplyType.INFO, f"预设角色为 {role}:\n" + self.roles[role][desckey])
+                reply = Reply(ReplyType.INFO, f"预设角色为 {role}")
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
         elif customize == True:
-            self.roleplays[sessionid] = RolePlay(bot, sessionid, clist[1], "%s")
+            clist = e_context["context"].content.split(maxsplit=2)
+            self.roleplays[sessionid] = RolePlay(bot, sessionid, clist[-1], "%s")
             reply = Reply(ReplyType.INFO, f"角色设定为:\n{clist[1]}")
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS

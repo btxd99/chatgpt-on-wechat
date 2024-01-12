@@ -40,7 +40,7 @@ class Humantone(Plugin):
             self.content_ignore_list = conf.get("content_ignore_list", [])
             self.reply_filter_list = conf.get("reply_filter_list", [])
             self.content_min_length = conf.get("content_min_length", 0)
-            self.content_max_length = conf.get("content_max_length", 0)
+            self.content_max_length = conf.get("content_max_length", 1000)
             self.max_statement = conf.get("max_statement", 0)
             self.punctuation_to_filter = conf.get("punctuation_to_filter", "")
             self.max_punctuation = conf.get("max_punctuation", 0)
@@ -60,29 +60,28 @@ class Humantone(Plugin):
         content = e_context["context"].content
         logger.info("[HumanTone] on_handle_context. content: %s" % content)
         # 如果消息内容小于最小长度，则忽略，用于过滤一些无意义的消息
-        if len(content) < self.content_min_length or len(content) > self.content_max_length :
-            logger.info(f"[HumanTone] Ignore: Len : {self.content_min_length} , ignore this msg.")
+        if len(content) < self.content_min_length or len(content) > self.content_max_length:
+            logger.info(f"[HumanTone] Ignore: Len : {len(content)} , ignore this msg.")
             e_context.action = EventAction.BREAK_PASS
             return
         # 遍历忽略列表，如果上下文内容匹配到忽略列表中的内容，则忽略
         for re_content_ignore in self.content_ignore_list:
             re_content_ignore = re.compile(re_content_ignore, flags=0)
             logger.debug(f"[HumanTone] Ignore: Try match {re_content_ignore} .")
-            if re_content_ignore.match(content):
+            if re_content_ignore.fullmatch(content):
                 logger.info(f"[HumanTone] Ignore: Match {re_content_ignore} in {content}, ignore this msg.")
                 e_context.action = EventAction.BREAK_PASS
                 return
+        e_context.action = EventAction.CONTINUE
 
     def on_decorate_reply(self, e_context: EventContext):
         # 如果是ERROR类型，删除[ERROR]答复
         if e_context["reply"].type in [ReplyType.ERROR] and not e_context["context"].content.startswith("#"):
-            reply = e_context["reply"]
-            reply_text = reply.content
-            logger.warn("[HumanTone] on_decorate_reply. Delete content: %s" % reply_text)
-            reply_text = ""
-            reply = Reply(ReplyType.TEXT, reply_text)
-            e_context["reply"] = reply
-            e_context.action = EventAction.CONTINUE
+            content = e_context["reply"].content
+            logger.warn("[HumanTone] on_decorate_reply. Delete content: %s" % content)
+            e_context["reply"].content = ""
+            logger.warn("[HumanTone] on_decorate_reply : %s" % e_context)
+            e_context.action = EventAction.BREAK_PASS
             return
         # 如果不是TEXT类型，则忽略
         if e_context["reply"].type not in [ReplyType.TEXT]:

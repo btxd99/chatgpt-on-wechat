@@ -1,54 +1,68 @@
 import sqlite3
+from datetime import datetime
+import json
 
-# 连接数据库（如果不存在会自动创建）
-conn = sqlite3.connect('chat_database.db')
-cursor = conn.cursor()
+from common.log import logger
 
-# 创建用户表
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER PRIMARY KEY,
-    username TEXT,
-    friend_status TEXT
-)
-''')
 
-# 创建话题表
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS topics (
-    topic_id INTEGER PRIMARY KEY,
-    topic_name TEXT
-)
-''')
+def initialize_database(database_name):
+    # 连接到数据库
+    if not database_name:
+        database_name = 'default_database_name.db'
+    logger.info("[Database] initialize_database {}".format(database_name))
+    conn = sqlite3.connect(database_name)
+    cursor = conn.cursor()
 
-# 创建聊天记录表
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS chat_messages (
-    message_id INTEGER PRIMARY KEY,
-    sender_user_id INTEGER REFERENCES users(user_id),
-    receiver_user_id INTEGER REFERENCES users(user_id),
-    topic_id INTEGER REFERENCES topics(topic_id),
-    timestamp DATETIME,
-    content TEXT
-)
-''')
+    # 用户信息表
+    user_info_table = """
+    CREATE TABLE IF NOT EXISTS user_info (
+        user_id TEXT PRIMARY KEY,
+        nickname TEXT,
+        relationship_status TEXT,
+        friend_added_time TEXT,
+        friend_removed_time TEXT,
+        relationship_intimacy TEXT
+    );
+    """
 
-# 创建用户-话题关系表
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS user_topics (
-    user_topic_id INTEGER PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
-    topic_id INTEGER REFERENCES topics(topic_id)
-)
-''')
+    # 聊天记录表
+    chat_record_table = """
+    CREATE TABLE IF NOT EXISTS chat_record (
+        msg_id TEXT PRIMARY KEY NOT NULL,
+        create_time TEXT NOT NULL,
+        ctype TEXT,
+        content TEXT,
+        from_user_id TEXT,
+        from_user_nickname TEXT,
+        to_user_id TEXT,
+        to_user_nickname TEXT,
+        other_user_id TEXT,
+        other_user_nickname TEXT,
+        is_group TEXT,
+        is_at TEXT,
+        actual_user_id TEXT,
+        actual_user_nickname TEXT,
+        self_display_name TEXT
+    );
+    """
 
-# 插入示例数据（假设你已经有了用户、话题等信息）
-cursor.executemany('INSERT INTO users (username, friend_status) VALUES (?, ?)', [('Alice', '正常'), ('Bob', '已拉黑')])
-cursor.executemany('INSERT INTO topics (topic_name) VALUES (?)', [('Python',), ('Data Science',)])
-cursor.executemany('INSERT INTO user_topics (user_id, topic_id) VALUES (?, ?)', [(1, 1), (2, 2)])
-cursor.executemany('INSERT INTO chat_messages (sender_user_id, receiver_user_id, topic_id, timestamp, content) VALUES (?, ?, ?, ?, ?)',
-                   [(1, 2, 1, '2023-01-01 12:00:00', 'Hello Bob!'), (2, 1, 2, '2023-01-01 12:05:00', 'Hi Alice!')])
+    # 话题记录表
+    topic_record_table = """
+    CREATE TABLE IF NOT EXISTS topic_record (
+        topic_id TEXT PRIMARY KEY,
+        topic_name TEXT NOT NULL,
+        topic_type TEXT,
+        creation_time TEXT,
+        topic_status TEXT
+    );
+    """
 
-# 提交更改并关闭连接
-conn.commit()
-conn.close()
+    # 执行创建表的 SQL 语句
+    cursor.executescript(user_info_table)
+    cursor.executescript(chat_record_table)
+    cursor.executescript(topic_record_table)
+
+    # 提交并关闭连接
+    conn.commit()
+    conn.close()
+

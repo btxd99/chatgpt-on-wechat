@@ -335,6 +335,7 @@ class ChatChannel(Channel):
     # 消费者函数，单独线程，用于从消息队列中取出消息并处理
     def consume(self):
         while True:
+            sleep_time = 20
             with self.lock:
                 session_ids = list(self.sessions.keys())
 
@@ -355,6 +356,7 @@ class ChatChannel(Channel):
                                     else:
                                         combine_content = context.content
                                 combine_context.content = combine_content
+                                sleep_time = 5
                             # 非普通文本内容，直接消费处理
                             else:
                                 logger.debug("[WX] consume context directly: {}".format(context))
@@ -372,6 +374,7 @@ class ChatChannel(Channel):
                                     if session_id not in self.futures:
                                         self.futures[session_id] = []
                                     self.futures[session_id].append(future)
+                                    sleep_time = 5
                         if semaphore._initial_value == semaphore._value + 1:  # 除了当前，没有任务再申请到信号量，说明所有任务都处理完毕
                             time.sleep(0.1)
                             self.futures[session_id] = [t for t in self.futures[session_id] if not t.done()]
@@ -382,7 +385,7 @@ class ChatChannel(Channel):
                         else:
                             logger.debug("[WX] ------------semaphore.release()---------------")
                             semaphore.release()
-            time.sleep(15)
+            time.sleep(sleep_time)
 
     # 取消session_id对应的所有任务，只能取消排队的消息和已提交线程池但未执行的任务
     def cancel_session(self, session_id):

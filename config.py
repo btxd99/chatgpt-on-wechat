@@ -153,27 +153,6 @@ available_setting = {
     "linkai_api_key": "",
     "linkai_app_code": "",
     "linkai_api_base": "https://api.link-ai.chat",  # linkAI服务地址，若国内无法访问或延迟较高可改为 https://api.link-ai.tech
-    "max_statement": 3,  # 设置最大语句数，超过了就丢弃后面的内容，免得太像AI
-    "content_ignore_list": [
-        "我通过了你的朋友验证请求，现在我们可以开始聊天了",  # 忽略特定内容，不发给AI进行回复
-        "忽略特定内容，不发给AI进行回复"
-    ],
-    "content_filter_list": [
-        "抱歉，",  # 过滤删除特定内容，避免太像AI
-        "抱歉，我无法理解你的意思",
-        "对不起，",
-        "有什么我能帮你的吗？",
-        "有什么我可以帮你的吗？",
-        "，怎么啦？",
-        "有什么需要帮忙的？",
-        "有什么事情需要聊聊吗？",
-        "有什么想聊的吗？",
-        "，有什么想聊的吗？",
-        "。有什么想聊的吗？",
-    ],
-    "topic_list": [        # 按话题列表聊天
-        "今天天气好吗？",
-    ]
 }
 
 
